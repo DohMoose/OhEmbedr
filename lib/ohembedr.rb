@@ -82,7 +82,7 @@ module OhEmbedr
       raise UnsupportedError, "Unspported protocol" if broken_url.length == 1 || (broken_url[0] != "http:" && broken_url[0] != "https:")
       
       @domain = broken_url[2].sub("www.", "")
-      @provider = @providers[@domain] || @@fallback_provider
+      @provider = @providers[@domain] || (options[:fallback] || @@fallback_provider)
       
       @url = options[:url] 
       
