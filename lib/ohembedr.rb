@@ -46,8 +46,11 @@ module OhEmbedr
                            "qik.com"        => {:base => "http://qik.com/api/oembed",               :dot_format => true }, 
                            "revision3.com"  => {:base => "http://revision3.com/api/oembed",         :dot_format => false},
                            "viddler.com"    => {:base => "http://lab.viddler.com/services/oembed",  :dot_format => false},
-                           "hulu.com"       => {:base => "http://www.hulu.com/api/oembed",          :dot_format => true}}
-        
+                           "hulu.com"       => {:base => "http://www.hulu.com/api/oembed",          :dot_format => true}
+                           }
+    @@fallback_provider = {:base => "http://oohembed.com/oohembed/",           :dot_format => false}
+    
+    
     # A mapping of supported formats to the methods which parse them
     @@formats = {"xml"  => {:require => "xmlsimple", :oembed_parser => "parse_xml_oembed" }, 
                  "json" => {:require => "json",      :oembed_parser => "parse_json_oembed"}}
@@ -65,7 +68,7 @@ module OhEmbedr
     # * Any other items in the options hash are appended to the oembed url as GET paramaters. Can be used to specify maxwidth, maxheight, etc.
     def initialize(options)
       raise ArgumentError, "No url provided in options hash" if options[:url].nil?
-      
+    
       if !options[:format].nil?
         load_format(options[:format])
       else
@@ -78,8 +81,8 @@ module OhEmbedr
       broken_url = options[:url].split("/")
       raise UnsupportedError, "Unspported protocol" if broken_url.length == 1 || (broken_url[0] != "http:" && broken_url[0] != "https:")
       
-      @domain = broken_url[2].sub("www.", "")      
-      raise UnsupportedError, "Unsupported provider" if @providers[@domain] == nil      
+      @domain = broken_url[2].sub("www.", "")
+      @provider = @providers[@domain] || @@fallback_provider
       
       @url = options[:url] 
       
@@ -116,8 +119,8 @@ module OhEmbedr
     
     private
     def url_for_request
-      base = @providers[@domain][:base]
-      if @providers[@domain][:dot_format]
+      base = @provider[:base]
+      if @provider[:dot_format]
         url = "#{base}.#{@format}?url=#{CGI::escape(@url)}"
       else
         url = "#{base}?url=#{CGI::escape(@url)}&format=#{@format}"
